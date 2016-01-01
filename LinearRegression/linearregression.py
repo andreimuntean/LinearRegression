@@ -10,24 +10,39 @@ import numpy as np
 
 class LinearRegression:
     def train(self, x, y):
-        x = LinearRegression.__add_bias(x)
-        y = np.atleast_2d(y).T
+        self.mean = np.mean(x, axis = 0)
+        self.std = np.std(x, axis = 0)
+        x, y = self.__preprocess_data(x, y)
 
         self.parameters = LinearRegression.__gradient_descent(x, y)
 
     def predict(self, x):
-        x = LinearRegression.__add_bias(x)
+        x = self.__preprocess_data(x, None)[0]
 
         return x @ self.parameters
 
     def get_cost(self, x, y):
         """Evaluates the performance of the model. A smaller value represents a higher degree of accuracy."""
-
-        x = LinearRegression.__add_bias(x)
-        x = np.atleast_2d(x)
-        y = np.atleast_2d(y).T
+        
+        x, y = self.__preprocess_data(x, y)
 
         return LinearRegression.__get_cost(x, y, self.parameters)[0]
+
+    def __preprocess_data(self, x, y):
+        # Normalizes the features to hasten convergence.
+        x = self.__normalize_features(x)
+
+        # Adds the bias term.
+        x = LinearRegression.__add_bias(x)
+        x = np.atleast_2d(x)
+
+        # Converts y into a column vector.
+        y = np.atleast_2d(y).T
+
+        return x, y
+
+    def __normalize_features(self, x):
+        return (x - self.mean) / self.std
   
     @staticmethod
     def __add_bias(x):
