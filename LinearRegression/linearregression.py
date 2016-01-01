@@ -61,10 +61,10 @@ class LinearRegression:
         m = x.shape[0]
 
         # Determines the extent to which parameters are updated.
-        learning_rate = 0.001
+        learning_rate = LinearRegression.__get_optimum_learning_rate(x, y)
 
         # Keeps a history of outputs from the cost function.
-        cost_history = np.zeros([maximum_iterations, 1])
+        cost_history = np.zeros(maximum_iterations)
 
         # Initializes the parameters.
         parameters = np.zeros([x.shape[1], 1])
@@ -75,13 +75,36 @@ class LinearRegression:
             parameters -= learning_rate / m * x.T @ errors
 
             # Records the cost for this iteration.
-            cost_history[iteration, 0] = LinearRegression.__get_cost(x, y, parameters)[0]
+            cost_history[iteration] = LinearRegression.__get_cost(x, y, parameters)[0]
 
             # Stops if the performance gains become negligible.
-            if iteration > 0 and cost_history[iteration - 1, 0] - cost_history[iteration, 0] < epsilon:
+            if iteration > 0 and cost_history[iteration - 1] - cost_history[iteration] < epsilon:
                 break
 
         return parameters
+
+    @staticmethod
+    def __get_optimum_learning_rate(x, y):
+        """Finds an efficient learning rate for gradient descent using the specified data."""
+
+        m = x.shape[0]
+        learning_rate = 1
+
+        while learning_rate > 0:
+            parameters = np.zeros([x.shape[1], 1])
+            cost_history = np.zeros(2)
+
+            for iteration in [0, 1]:
+                errors = x @ parameters - y
+                parameters -= learning_rate / m * x.T @ errors
+                cost_history[iteration] = LinearRegression.__get_cost(x, y, parameters)[0]
+
+            if cost_history[1] < cost_history[0]:
+                return learning_rate
+            else:
+                learning_rate /= 3
+
+        raise FloatingPointError('The learning rate has shrunk to 0.')
 
     @staticmethod
     def __get_cost(x, y, parameters, regularization_term = 0):
