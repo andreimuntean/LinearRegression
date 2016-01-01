@@ -9,19 +9,82 @@ import numpy as np
 
 
 class LinearRegression:
-    def __init__(self, learning_rate = 0.1):
-        self.learning_rate = learning_rate
+    def train(self, x, y):
+        x = LinearRegression.__add_bias(x)
+        y = np.atleast_2d(y).T
 
-    def train(self, x, y, maximum_iterations = 100000):
-        pass
+        self.parameters = LinearRegression.__gradient_descent(x, y)
+
+    def predict(self, x):
+        x = LinearRegression.__add_bias(x)
+
+        return x @ self.parameters
+
+    def get_cost(self, x, y):
+        """Evaluates the performance of the model. A smaller value represents a higher degree of accuracy."""
+
+        x = LinearRegression.__add_bias(x)
+        x = np.atleast_2d(x)
+        y = np.atleast_2d(y).T
+
+        return LinearRegression.__get_cost(x, y, self.parameters)[0]
+  
+    @staticmethod
+    def __add_bias(x):
+        """Prepends the bias term to the specified array."""
+
+        if x.shape[0] == 1:
+            return np.append(1, x)
+        else:
+            return np.append(np.ones([x.shape[0], 1]), x, axis = 1)
 
     @staticmethod
-    def get_cost(x, y, theta, regularization_term = 0.1):
-        """Computes the cost of linear regression using the values of theta as its parameters."""
+    def __gradient_descent(x, y, maximum_iterations = 100000, epsilon = 1e-7):
+        """Trains the model using gradient descent."""
 
-        # The number of training examples.
+        # Determines the number of training examples.
         m = x.shape[0]
-        predictions = x @ theta.transpose()
-        squared_errors = np.power(predictions - y.transpose(), 2)
 
-        return 1 / (2 * m) * np.sum(squared_errors)
+        # Determines the extent to which parameters are updated.
+        learning_rate = 0.001
+
+        # Keeps a history of outputs from the cost function.
+        cost_history = np.zeros([maximum_iterations, 1])
+
+        # Initializes the parameters.
+        parameters = np.zeros([x.shape[1], 1])
+
+        # Iterates through the training set multiple times.
+        for iteration in range(0, maximum_iterations):
+            errors = x @ parameters - y
+            parameters -= learning_rate / m * x.T @ errors
+
+            # Records the cost for this iteration.
+            cost_history[iteration, 0] = LinearRegression.__get_cost(x, y, parameters)[0]
+
+            # Stops if the performance gains become negligible.
+            if iteration > 0 and cost_history[iteration - 1, 0] - cost_history[iteration, 0] < epsilon:
+                break
+
+        return parameters
+
+    @staticmethod
+    def __get_cost(x, y, parameters, regularization_term = 0):
+        # Determines the number of training examples.
+        m = x.shape[0]
+
+        # Determines the number of incorrect predictions.
+        errors = x @ parameters - y
+        sum_of_squared_errors = np.sum(np.power(errors, 2))
+
+        # Determines the regularization applied to the cost to prevent overfitting.
+        regularization_values = regularization_term * np.sum(np.power(parameters[1:, :], 2))
+
+        # Calculates and regularizes the cost.
+        cost = (sum_of_squared_errors + regularization_values) / 2 * m
+
+        # Calculates the gradient -- the derivative of the cost function.
+        gradient = errors.T @ x / m
+        gradient[:, 1:] += regularization_term * parameters[1:, :].T
+
+        return cost, gradient

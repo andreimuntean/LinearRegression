@@ -1,4 +1,4 @@
-#!/usr/bin/python3
+﻿#!/usr/bin/python3
 
 """datahelpers.py: Provides functions for handling data."""
 
@@ -11,13 +11,13 @@ import numpy as np
 def separate_data(x, y, threshold = 0.7):
     """Splits the specified data into training and test sets."""
 
-    pivot_index = threshold * x.shape[0]
+    pivot_index = round(threshold * x.shape[0])
 
     return {
-        'training_x': x[1 : pivot_index],
-        'training_y': y[1 : pivot_index],
-        'test_x': x[pivot_index :],
-        'test_y': y[pivot_index :]
+        'training_x': x[0 : pivot_index, :],
+        'training_y': y[0 : pivot_index],
+        'test_x': x[pivot_index:, :],
+        'test_y': y[pivot_index:]
     }
 
 
