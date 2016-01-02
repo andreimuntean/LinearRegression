@@ -8,17 +8,38 @@ __license__ = 'MIT License'
 import numpy as np
 
 
-def separate_data(x, y, threshold = 0.7):
-    """Splits the specified data into training and test sets."""
+def shuffle_data(x, y):
+    random_indexes = np.random.permutation(x.shape[0])
+    shuffled_x = np.empty_like(x)
+    shuffled_y = np.empty_like(y)
 
+    for index in range(0, shuffled_x.shape[0]):
+        random_index = random_indexes[index]
+        shuffled_x[index] = x[random_index]
+        shuffled_y[index] = y[random_index]
+
+    return x, y
+
+
+def split_data(x, y, threshold = 0.7, shuffle = True):
+    """Generates training and tests sets from the specified data.""" 
+
+    if shuffle:
+        x, y = shuffle_data(x, y)
+    
     pivot_index = round(threshold * x.shape[0])
 
-    return {
-        'training_x': x[0 : pivot_index, :],
-        'training_y': y[0 : pivot_index],
-        'test_x': x[pivot_index:, :],
-        'test_y': y[pivot_index:]
+    training_data = {
+        'x': x[0 : pivot_index],
+        'y': y[0 : pivot_index]
     }
+
+    test_data = {
+        'x': x[pivot_index:],
+        'y': y[pivot_index:]
+    }
+
+    return training_data, test_data
 
 
 def read_data(path):
@@ -32,4 +53,4 @@ def read_data(path):
     # Gets the independent variables.
     x = data[:, 1:]
 
-    return separate_data(x, y)
+    return x, y

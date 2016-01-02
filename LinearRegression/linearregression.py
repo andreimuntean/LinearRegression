@@ -10,16 +10,18 @@ import numpy as np
 
 class LinearRegression:
     def train(self, x, y):
+        # Calculates the values needed for data preprocessing.
         self.mean = np.mean(x, axis = 0)
         self.std = np.std(x, axis = 0)
-        x, y = self.__preprocess_data(x, y)
 
+        # Preprocesses the data and trains the model.
+        x, y = self.__preprocess_data(x, y)
         self.parameters = LinearRegression.__gradient_descent(x, y)
 
     def predict(self, x):
-        x = self.__preprocess_data(x, None)[0]
+        x = self.__preprocess_data(x)
 
-        return x @ self.parameters
+        return np.asscalar(x @ self.parameters)
 
     def get_cost(self, x, y):
         """Evaluates the performance of the model. A smaller value represents a higher degree of accuracy."""
@@ -28,13 +30,16 @@ class LinearRegression:
 
         return LinearRegression.__get_cost(x, y, self.parameters)[0]
 
-    def __preprocess_data(self, x, y):
+    def __preprocess_data(self, x, y = None):
         # Normalizes the features to hasten convergence.
         x = self.__normalize_features(x)
 
         # Adds the bias term.
         x = LinearRegression.__add_bias(x)
         x = np.atleast_2d(x)
+
+        if y is None:
+            return x
 
         # Converts y into a column vector.
         y = np.atleast_2d(y).T
@@ -48,7 +53,7 @@ class LinearRegression:
     def __add_bias(x):
         """Prepends the bias term to the specified array."""
 
-        if x.shape[0] == 1:
+        if x.ndim == 1:
             return np.append(1, x)
         else:
             return np.append(np.ones([x.shape[0], 1]), x, axis = 1)
@@ -116,7 +121,7 @@ class LinearRegression:
         sum_of_squared_errors = np.sum(np.power(errors, 2))
 
         # Determines the regularization applied to the cost to prevent overfitting.
-        regularization_values = regularization_term * np.sum(np.power(parameters[1:, :], 2))
+        regularization_values = regularization_term * np.sum(np.power(parameters[1:], 2))
 
         # Calculates and regularizes the cost.
         cost = (sum_of_squared_errors + regularization_values) / 2 * m
